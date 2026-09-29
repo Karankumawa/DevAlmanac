@@ -1,12 +1,16 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  BookOpen,
-  Search,
   Code2,
+  Search,
   Menu,
   ChevronDown,
   Sparkles,
   CheckCircle,
+  BookOpen,
+  FileText,
+  Flame,
+  Sun,
+  Moon,
 } from 'lucide-react';
 
 export const Navbar = ({
@@ -16,118 +20,132 @@ export const Navbar = ({
   onOpenSearch = () => {},
   onToggleMobileMenu = () => {},
   onGoHome = () => {},
+  currentView = 'tracks',
+  onSelectView = () => {},
   progress = null,
 }) => {
+  const [isDark, setIsDark] = useState(true);
+
+  const toggleTheme = () => {
+    setIsDark(!isDark);
+    if (!isDark) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  };
+
   return (
     <header className="sticky top-0 z-40 w-full border-b border-slate-800/80 bg-[#090d16]/95 backdrop-blur-md">
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
-        {/* Left: Mobile hamburger & Brand */}
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+        {/* Left: Hamburger & Brand */}
         <div className="flex items-center space-x-3">
-          {/* Mobile menu hamburger toggle */}
           <button
             type="button"
             onClick={onToggleMobileMenu}
-            className="md:hidden p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/60 focus:outline-none"
+            className="md:hidden p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/60"
             aria-label="Toggle Navigation Menu"
           >
             <Menu className="w-5 h-5" />
           </button>
 
-          {/* Brand Logo */}
+          {/* Brand Logo (CodeWithHarry </> style) */}
           <div
             onClick={onGoHome}
             className="flex items-center space-x-2.5 cursor-pointer group select-none"
           >
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-sky-500 to-indigo-600 p-0.5 shadow-lg shadow-sky-500/20 group-hover:shadow-sky-500/40 transition-all">
-              <div className="w-full h-full bg-[#090d16] rounded-[10px] flex items-center justify-center">
-                <Code2 className="w-5 h-5 text-sky-400 group-hover:scale-110 transition-transform" />
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-sky-500 via-indigo-500 to-purple-600 p-0.5 shadow-lg shadow-sky-500/20 group-hover:scale-105 transition-transform">
+              <div className="w-full h-full bg-[#090d16] rounded-[10px] flex items-center justify-center font-mono font-bold text-sky-400 text-sm">
+                &lt;/&gt;
               </div>
             </div>
             <div className="flex flex-col">
-              <div className="flex items-center space-x-1.5">
-                <span className="font-extrabold text-base tracking-tight text-white group-hover:text-sky-400 transition-colors">
-                  Dev<span className="text-sky-400">Almanac</span>
-                </span>
-                <span className="hidden sm:inline-block px-1.5 py-0.2 rounded text-[10px] uppercase font-bold tracking-wider bg-sky-500/10 text-sky-400 border border-sky-500/20">
-                  v1.0
-                </span>
-              </div>
-              <span className="hidden lg:block text-[11px] text-slate-400 font-medium">
-                From Syntax to Systems
+              <span className="font-extrabold text-base tracking-tight text-white group-hover:text-sky-400 transition-colors">
+                Dev<span className="text-sky-400">Almanac</span>
+              </span>
+              <span className="hidden lg:block text-[10px] text-slate-400 font-medium">
+                Syntax to Systems
               </span>
             </div>
           </div>
         </div>
 
-        {/* Center: Track Switcher Selector */}
-        <div className="hidden sm:flex items-center space-x-2">
-          <div className="relative group">
-            <button
-              type="button"
-              className="flex items-center space-x-2 px-3.5 py-1.5 rounded-lg bg-slate-900/80 border border-slate-800 text-sm font-medium text-slate-200 hover:border-slate-700 hover:bg-slate-850 transition-all"
-            >
-              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: activeTrack?.color || '#38bdf8' }} />
-              <span>{activeTrack?.name || 'Select Track'}</span>
-              <ChevronDown className="w-3.5 h-3.5 text-slate-400 group-hover:rotate-180 transition-transform duration-200" />
-            </button>
+        {/* Center: Main Navigation Links (CodeWithHarry / GeeksforGeeks navigation) */}
+        <nav className="hidden lg:flex items-center space-x-1">
+          <button
+            type="button"
+            onClick={() => onSelectView('tracks')}
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              currentView === 'tracks'
+                ? 'bg-sky-500/15 text-sky-300 font-bold border border-sky-500/30'
+                : 'text-slate-300 hover:text-white hover:bg-slate-850'
+            }`}
+          >
+            Learning Tracks
+          </button>
 
-            {/* Dropdown Menu */}
-            <div className="absolute left-0 mt-1 w-56 rounded-xl bg-[#0f172a] border border-slate-800 shadow-2xl py-1.5 hidden group-hover:block transition-all z-50 animate-in fade-in slide-in-from-top-1">
-              <div className="px-3 py-1.5 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
-                Language Tracks
-              </div>
-              {tracks.map((track) => {
-                const isSelected = activeTrack?.slug === track.slug;
-                return (
-                  <button
-                    key={track._id || track.slug}
-                    type="button"
-                    onClick={() => onSelectTrack(track.slug)}
-                    className={`w-full text-left px-3 py-2 text-xs flex items-center justify-between transition-colors ${
-                      isSelected
-                        ? 'bg-sky-500/10 text-sky-400 font-semibold'
-                        : 'text-slate-300 hover:bg-slate-800/60'
-                    }`}
-                  >
-                    <div className="flex items-center space-x-2">
-                      <span
-                        className="w-2 h-2 rounded-full"
-                        style={{ backgroundColor: track.color || '#38bdf8' }}
-                      />
-                      <span>{track.name}</span>
-                    </div>
-                    {isSelected && <CheckCircle className="w-3.5 h-3.5 text-sky-400" />}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
+          <button
+            type="button"
+            onClick={() => onSelectView('notes')}
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              currentView === 'notes'
+                ? 'bg-purple-500/15 text-purple-300 font-bold border border-purple-500/30'
+                : 'text-slate-300 hover:text-white hover:bg-slate-850'
+            }`}
+          >
+            Notes & Handbooks
+          </button>
 
-        {/* Right: Search Bar & Global Progress */}
-        <div className="flex items-center space-x-3">
-          {/* Quick Search Trigger */}
+          <button
+            type="button"
+            onClick={() => onSelectView('cheatsheets')}
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              currentView === 'cheatsheets'
+                ? 'bg-emerald-500/15 text-emerald-300 font-bold border border-emerald-500/30'
+                : 'text-slate-300 hover:text-white hover:bg-slate-850'
+            }`}
+          >
+            Cheatsheets
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onSelectView('playground')}
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center space-x-1.5 ${
+              currentView === 'playground'
+                ? 'bg-amber-500/15 text-amber-300 font-bold border border-amber-500/30'
+                : 'text-slate-300 hover:text-white hover:bg-slate-850'
+            }`}
+          >
+            <Flame className="w-3.5 h-3.5 text-amber-400" />
+            <span>Try It Yourself</span>
+          </button>
+        </nav>
+
+        {/* Right: Search Bar, Progress & Theme Toggle */}
+        <div className="flex items-center space-x-2.5">
+          {/* Quick Search */}
           <button
             type="button"
             onClick={onOpenSearch}
-            className="flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-slate-900/90 border border-slate-800/90 hover:border-sky-500/40 text-slate-400 hover:text-slate-200 text-xs transition-all w-36 sm:w-56 justify-between group shadow-inner"
+            className="flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-slate-900/90 border border-slate-800 hover:border-sky-500/40 text-slate-400 hover:text-slate-200 text-xs transition-all w-36 sm:w-52 justify-between group shadow-inner"
           >
             <div className="flex items-center space-x-2 truncate">
               <Search className="w-3.5 h-3.5 text-slate-500 group-hover:text-sky-400 transition-colors" />
-              <span className="truncate">Search almanac...</span>
+              <span className="truncate">Search notes, code...</span>
             </div>
             <kbd className="hidden sm:inline-flex items-center space-x-0.5 px-1.5 py-0.5 text-[10px] font-mono bg-slate-950 text-slate-400 rounded border border-slate-800">
-              <span className="text-[10px]">Ctrl</span>
+              <span>⌘</span>
               <span>K</span>
             </kbd>
           </button>
 
-          {/* Track Completion Badge */}
+          {/* Track Progress Badge */}
           {progress && progress.totalLessons > 0 && (
             <div className="hidden xl:flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-xs">
               <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
               <span className="text-emerald-300 font-medium">
-                {progress.completedCount}/{progress.totalLessons} Completed
+                {progress.completedCount}/{progress.totalLessons}
               </span>
               <span className="text-emerald-400 font-bold font-mono">
                 {progress.percentage}%
@@ -135,7 +153,17 @@ export const Navbar = ({
             </div>
           )}
 
-          {/* GitHub link / Documentation */}
+          {/* Theme Toggle Button (CodeWithHarry style) */}
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/60 transition-colors"
+            title="Toggle Theme"
+          >
+            {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
+          </button>
+
+          {/* GitHub link */}
           <a
             href="https://github.com"
             target="_blank"

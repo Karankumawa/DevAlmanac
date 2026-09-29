@@ -16,6 +16,10 @@ import {
   Eye,
   EyeOff,
   Sparkles,
+  Flame,
+  Printer,
+  Download,
+  Share2,
 } from 'lucide-react';
 import { CodeBlock } from './CodeBlock';
 
@@ -25,11 +29,11 @@ export const LessonReader = ({
   onToggleComplete = () => {},
   onNavigateLesson = () => {},
   onSelectTrack = () => {},
+  onOpenPlayground = () => {},
 }) => {
   const [showSolution, setShowSolution] = useState(false);
   const [revealedHints, setRevealedHints] = useState({});
 
-  // Reset challenge state when switching lessons
   useEffect(() => {
     setShowSolution(false);
     setRevealedHints({});
@@ -48,12 +52,11 @@ export const LessonReader = ({
 
   const handleCompleteClick = () => {
     if (!isCompleted) {
-      // Fire confetti celebration!
       confetti({
-        particleCount: 80,
-        spread: 70,
+        particleCount: 90,
+        spread: 75,
         origin: { y: 0.8 },
-        colors: ['#38bdf8', '#818cf8', '#34d399', '#f472b6'],
+        colors: ['#38bdf8', '#818cf8', '#34d399', '#f472b6', '#fbbf24'],
       });
     }
     onToggleComplete();
@@ -66,7 +69,6 @@ export const LessonReader = ({
     }));
   };
 
-  // Get difficulty badge styling
   const getDifficultyBadge = (difficulty) => {
     switch (difficulty) {
       case 'Beginner':
@@ -86,32 +88,81 @@ export const LessonReader = ({
 
   return (
     <article className="flex-1 min-w-0 max-w-4xl mx-auto px-4 sm:px-8 py-8">
-      {/* 1. Breadcrumbs Navigation */}
-      <nav className="flex items-center space-x-2 text-xs text-slate-400 mb-6 overflow-x-auto pb-1">
+      {/* 1. Breadcrumbs Navigation (GeeksforGeeks tutorial style) */}
+      <div className="flex items-center justify-between mb-4">
+        <nav className="flex items-center space-x-2 text-xs text-slate-400 overflow-x-auto pb-1">
+          <button
+            type="button"
+            onClick={() => onSelectTrack(track?.slug)}
+            className="hover:text-sky-400 transition-colors shrink-0"
+          >
+            Tutorials
+          </button>
+          <ChevronRight className="w-3.5 h-3.5 text-slate-600 shrink-0" />
+          <button
+            type="button"
+            onClick={() => onSelectTrack(track?.slug)}
+            className="hover:text-sky-400 transition-colors font-medium text-slate-300 shrink-0"
+          >
+            {track?.name}
+          </button>
+          {module && (
+            <>
+              <ChevronRight className="w-3.5 h-3.5 text-slate-600 shrink-0" />
+              <span className="text-slate-400 shrink-0">{module.title}</span>
+            </>
+          )}
+          <ChevronRight className="w-3.5 h-3.5 text-slate-600 shrink-0" />
+          <span className="text-sky-400 font-medium truncate">{lesson.title}</span>
+        </nav>
+
+        {/* Quick Playground Button */}
         <button
           type="button"
-          onClick={() => onSelectTrack(track?.slug)}
-          className="hover:text-sky-400 transition-colors shrink-0"
+          onClick={onOpenPlayground}
+          className="hidden sm:flex items-center space-x-1.5 px-3 py-1 rounded-lg text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 transition-colors shrink-0"
         >
-          Tracks
+          <Flame className="w-3.5 h-3.5" />
+          <span>Try It in Playground</span>
         </button>
-        <ChevronRight className="w-3.5 h-3.5 text-slate-600 shrink-0" />
-        <button
-          type="button"
-          onClick={() => onSelectTrack(track?.slug)}
-          className="hover:text-sky-400 transition-colors font-medium text-slate-300 shrink-0"
-        >
-          {track?.name}
-        </button>
-        {module && (
-          <>
-            <ChevronRight className="w-3.5 h-3.5 text-slate-600 shrink-0" />
-            <span className="text-slate-400 shrink-0">{module.title}</span>
-          </>
-        )}
-        <ChevronRight className="w-3.5 h-3.5 text-slate-600 shrink-0" />
-        <span className="text-sky-400 font-medium truncate">{lesson.title}</span>
-      </nav>
+      </div>
+
+      {/* Top Chapter Navigation bar (W3Schools / GeeksforGeeks Next & Prev bar) */}
+      <div className="flex items-center justify-between py-2.5 px-4 mb-6 rounded-xl bg-slate-900/60 border border-slate-800 text-xs text-slate-400">
+        <div>
+          {navigation?.prev ? (
+            <button
+              type="button"
+              onClick={() => onNavigateLesson(track.slug, navigation.prev.slug)}
+              className="flex items-center space-x-1 hover:text-white font-medium transition-colors"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Previous Chapter</span>
+            </button>
+          ) : (
+            <span className="text-slate-600">Beginning of Track</span>
+          )}
+        </div>
+
+        <span className="font-mono text-slate-500 text-[11px]">
+          Lesson {navigation?.currentIndex || 1} of {navigation?.totalInTrack || 1}
+        </span>
+
+        <div>
+          {navigation?.next ? (
+            <button
+              type="button"
+              onClick={() => onNavigateLesson(track.slug, navigation.next.slug)}
+              className="flex items-center space-x-1 hover:text-white font-medium transition-colors text-sky-400"
+            >
+              <span>Next Chapter</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          ) : (
+            <span className="text-slate-600">End of Track</span>
+          )}
+        </div>
+      </div>
 
       {/* 2. Lesson Header */}
       <header className="mb-8">
@@ -236,9 +287,20 @@ export const LessonReader = ({
       {/* 5. Code Walkthroughs */}
       {snippets.length > 0 && (
         <section id="code-walkthrough" className="my-10 pt-6 border-t border-slate-800/80">
-          <div className="flex items-center space-x-2 text-sm font-bold uppercase tracking-wider text-slate-300 mb-2">
-            <Code2 className="w-4 h-4 text-sky-400" />
-            <span>Step-by-Step Code Walkthrough</span>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center space-x-2 text-sm font-bold uppercase tracking-wider text-slate-300">
+              <Code2 className="w-4 h-4 text-sky-400" />
+              <span>Step-by-Step Code Walkthrough</span>
+            </div>
+
+            <button
+              type="button"
+              onClick={onOpenPlayground}
+              className="flex items-center space-x-1 text-xs text-amber-400 hover:text-amber-300 font-medium"
+            >
+              <Flame className="w-3.5 h-3.5" />
+              <span>Try in Interactive Editor</span>
+            </button>
           </div>
           <p className="text-xs text-slate-400 mb-4">
             Interactive code breakdown with line annotations and execution preview. Click highlighted lines for architectural notes.
@@ -370,16 +432,16 @@ export const LessonReader = ({
         </section>
       )}
 
-      {/* 8. Navigation & Progress Footer */}
+      {/* 8. Bottom Navigation Footer (GeeksforGeeks Next / Prev Buttons) */}
       <footer className="mt-12 pt-6 border-t border-slate-800/80 space-y-6">
         {/* Mark as Completed CTA */}
         <div className="flex flex-col sm:flex-row items-center justify-between p-5 rounded-2xl bg-gradient-to-r from-slate-900 to-[#0d131f] border border-slate-800 gap-4">
           <div>
             <h4 className="text-sm font-bold text-white mb-1">
-              {isCompleted ? 'Lesson Completed!' : 'Finished reading this lesson?'}
+              {isCompleted ? 'Chapter Completed!' : 'Finished this lesson?'}
             </h4>
             <p className="text-xs text-slate-400">
-              Track your progress across the {track?.name} curriculum.
+              Record your progress across the {track?.name} curriculum.
             </p>
           </div>
 
@@ -397,7 +459,7 @@ export const LessonReader = ({
           </button>
         </div>
 
-        {/* Previous & Next Lesson Links */}
+        {/* Previous & Next Chapter Navigation */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {navigation?.prev ? (
             <button
@@ -407,7 +469,7 @@ export const LessonReader = ({
             >
               <div className="flex items-center space-x-1.5 text-[11px] font-medium text-slate-400 mb-1">
                 <ArrowLeft className="w-3 h-3 group-hover:-translate-x-1 transition-transform" />
-                <span>Previous Lesson</span>
+                <span>Previous Chapter</span>
               </div>
               <div className="text-sm font-bold text-slate-200 group-hover:text-sky-400 transition-colors truncate">
                 {navigation.prev.title}
@@ -424,7 +486,7 @@ export const LessonReader = ({
               className="p-4 rounded-xl border border-slate-800/80 bg-slate-900/40 hover:bg-slate-850 hover:border-sky-500/30 text-right transition-all group sm:col-start-2"
             >
               <div className="flex items-center justify-end space-x-1.5 text-[11px] font-medium text-slate-400 mb-1">
-                <span>Next Lesson</span>
+                <span>Next Chapter</span>
                 <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
               </div>
               <div className="text-sm font-bold text-slate-200 group-hover:text-sky-400 transition-colors truncate">

@@ -7,6 +7,9 @@ import {
   Compass,
   Trophy,
   ArrowUp,
+  Download,
+  Flame,
+  Printer,
 } from 'lucide-react';
 
 export const TableOfContents = ({
@@ -17,10 +20,10 @@ export const TableOfContents = ({
   onToggleComplete = () => {},
   hasPitfalls = false,
   hasChallenge = false,
+  onOpenPlayground = () => {},
 }) => {
   const [scrollProgress, setScrollProgress] = useState(0);
 
-  // Track window scroll progress percentage
   useEffect(() => {
     const handleScroll = () => {
       const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
@@ -41,13 +44,17 @@ export const TableOfContents = ({
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handlePrint = () => {
+    window.print();
+  };
+
   return (
-    <aside className="w-64 shrink-0 hidden lg:block h-[calc(100vh-4rem)] sticky top-16 overflow-y-auto border-l border-slate-800/80 bg-[#0b0f19]/80 p-4 select-none">
+    <aside className="w-64 shrink-0 hidden lg:block h-[calc(100vh-6.5rem)] sticky top-[6.5rem] overflow-y-auto border-l border-slate-800/80 bg-[#0b0f19]/80 p-4 select-none">
       <div className="space-y-6">
         {/* Reading Progress Indicator */}
         <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80">
           <div className="flex items-center justify-between text-xs mb-1.5 font-medium">
-            <span className="text-slate-400">Reading Progress</span>
+            <span className="text-slate-400">Chapter Progress</span>
             <span className="text-sky-400 font-mono font-bold">{scrollProgress}%</span>
           </div>
           <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
@@ -58,7 +65,7 @@ export const TableOfContents = ({
           </div>
         </div>
 
-        {/* Dynamic Table of Contents Navigation */}
+        {/* Dynamic Table of Contents Navigation (GeeksforGeeks On This Page style) */}
         <div>
           <div className="flex items-center space-x-2 text-xs font-bold text-slate-300 uppercase tracking-wider mb-3">
             <List className="w-3.5 h-3.5 text-sky-400" />
@@ -66,7 +73,6 @@ export const TableOfContents = ({
           </div>
 
           <nav className="space-y-1 text-xs">
-            {/* Overview Anchor */}
             <a
               href="#overview"
               onClick={(e) => {
@@ -79,10 +85,9 @@ export const TableOfContents = ({
                   : 'text-slate-400 hover:text-slate-200 hover:bg-slate-850'
               }`}
             >
-              1. Concept Overview
+              1. Overview & Architecture
             </a>
 
-            {/* Extracted Markdown Headings */}
             {headings.map((item, idx) => (
               <a
                 key={item.id || idx}
@@ -103,7 +108,6 @@ export const TableOfContents = ({
               </a>
             ))}
 
-            {/* Code Walkthrough Anchor */}
             <a
               href="#code-walkthrough"
               onClick={(e) => {
@@ -119,7 +123,6 @@ export const TableOfContents = ({
               Code Walkthrough
             </a>
 
-            {/* Pitfalls Anchor */}
             {hasPitfalls && (
               <a
                 href="#common-pitfalls"
@@ -138,7 +141,6 @@ export const TableOfContents = ({
               </a>
             )}
 
-            {/* Practice Challenge Anchor */}
             {hasChallenge && (
               <a
                 href="#practice-challenge"
@@ -159,8 +161,29 @@ export const TableOfContents = ({
           </nav>
         </div>
 
+        {/* Quick Tools & Sandbox Action */}
+        <div className="space-y-2 pt-2 border-t border-slate-800/80">
+          <button
+            type="button"
+            onClick={onOpenPlayground}
+            className="w-full flex items-center justify-center space-x-1.5 py-2 px-3 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 text-xs font-semibold transition-colors"
+          >
+            <Flame className="w-3.5 h-3.5" />
+            <span>Open in Playground</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handlePrint}
+            className="w-full flex items-center justify-center space-x-1.5 py-1.5 px-3 rounded-xl bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800 text-xs transition-colors"
+          >
+            <Printer className="w-3.5 h-3.5" />
+            <span>Print Chapter</span>
+          </button>
+        </div>
+
         {/* Quick Completion Action */}
-        <div className="pt-4 border-t border-slate-800/80">
+        <div className="pt-2 border-t border-slate-800/80">
           <button
             type="button"
             onClick={onToggleComplete}
@@ -173,18 +196,18 @@ export const TableOfContents = ({
             <CheckCircle2
               className={`w-4 h-4 ${isCompleted ? 'text-emerald-400' : 'text-slate-500'}`}
             />
-            <span>{isCompleted ? 'Lesson Completed' : 'Mark as Completed'}</span>
+            <span>{isCompleted ? 'Chapter Completed' : 'Mark as Completed'}</span>
           </button>
         </div>
 
-        {/* Back to top button */}
+        {/* Back to top */}
         <button
           type="button"
           onClick={scrollToTop}
-          className="w-full flex items-center justify-center space-x-1 py-1.5 text-[11px] text-slate-500 hover:text-slate-300 transition-colors"
+          className="w-full flex items-center justify-center space-x-1 py-1 text-[11px] text-slate-500 hover:text-slate-300 transition-colors"
         >
           <ArrowUp className="w-3 h-3" />
-          <span>Scroll to Top</span>
+          <span>Back to Top</span>
         </button>
       </div>
     </aside>

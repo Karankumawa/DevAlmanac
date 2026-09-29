@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
+import { LanguageRibbon } from './components/LanguageRibbon';
 import { Sidebar } from './components/Sidebar';
 import { MobileDrawer } from './components/MobileDrawer';
 import { LessonReader } from './components/LessonReader';
 import { TableOfContents } from './components/TableOfContents';
 import { SearchModal } from './components/SearchModal';
 import { TrackOverview } from './components/TrackOverview';
+import { CheatsheetsView } from './components/CheatsheetsView';
+import { HandbooksView } from './components/HandbooksView';
+import { PlaygroundView } from './components/PlaygroundView';
 import { api } from './services/api';
 
 export function App() {
@@ -20,6 +24,7 @@ export function App() {
   const [selectedDifficulty, setSelectedDifficulty] = useState('All');
 
   const [viewMode, setViewMode] = useState('overview'); // 'overview' | 'lesson'
+  const [currentView, setCurrentView] = useState('tracks'); // 'tracks' | 'notes' | 'cheatsheets' | 'playground'
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -51,17 +56,24 @@ export function App() {
         }
         setProgressMap(pMap);
 
-        // Parse path from URL (e.g. /track/:trackSlug/:lessonSlug or hash)
+        // Parse path from URL
         const path = window.location.pathname;
-        const match = path.match(/\/track\/([^/]+)(?:\/([^/]+))?/);
-
-        if (match && match[1]) {
-          const tSlug = match[1];
-          const lSlug = match[2] || '';
-          loadTrackAndLesson(tSlug, lSlug, loadedTracks);
-        } else if (loadedTracks.length > 0) {
-          // Stay on overview by default
-          setViewMode('overview');
+        if (path === '/notes' || path === '/handbooks') {
+          setCurrentView('notes');
+        } else if (path === '/cheatsheets') {
+          setCurrentView('cheatsheets');
+        } else if (path === '/playground') {
+          setCurrentView('playground');
+        } else {
+          const match = path.match(/\/track\/([^/]+)(?:\/([^/]+))?/);
+          if (match && match[1]) {
+            const tSlug = match[1];
+            const lSlug = match[2] || '';
+            loadTrackAndLesson(tSlug, lSlug, loadedTracks);
+          } else {
+            setViewMode('overview');
+            setCurrentView('tracks');
+          }
         }
       } catch (err) {
         console.error('Failed to initialize DevAlmanac:', err);
@@ -72,13 +84,22 @@ export function App() {
 
     initApp();
 
-    // Browser back/forward navigation support
     const handlePopState = () => {
-      const match = window.location.pathname.match(/\/track\/([^/]+)(?:\/([^/]+))?/);
-      if (match && match[1]) {
-        loadTrackAndLesson(match[1], match[2] || '');
+      const path = window.location.pathname;
+      if (path === '/notes') {
+        setCurrentView('notes');
+      } else if (path === '/cheatsheets') {
+        setCurrentView('cheatsheets');
+      } else if (path === '/playground') {
+        setCurrentView('playground');
       } else {
-        setViewMode('overview');
+        const match = path.match(/\/track\/([^/]+)(?:\/([^/]+))?/);
+        if (match && match[1]) {
+          loadTrackAndLesson(match[1], match[2] || '');
+        } else {
+          setViewMode('overview');
+          setCurrentView('tracks');
+        }
       }
     };
 
@@ -100,13 +121,14 @@ export function App() {
   }, []);
 
   // 3. Load Track & Lesson
-  const loadTrackAndLesson = async (trackSlug, lessonSlug = '', existingTracks = null) => {
+  const loadTrackAndLesson = async (trackSlug, lessonSlug = '') => {
     try {
       setIsLoading(true);
       const trackRes = await api.getTrack(trackSlug);
       const trackData = trackRes.data;
       setActiveTrack(trackData);
       setActiveTrackSlug(trackSlug);
+      setCurrentView('tracks');
 
       // Fetch progress for this track
       const pRes = await api.getProgress(trackData._id);
@@ -119,7 +141,6 @@ export function App() {
         }));
       }
 
-      // If no lessonSlug is provided, default to the first lesson in the first module
       let targetLessonSlug = lessonSlug;
       if (!targetLessonSlug && trackData.modules?.length > 0) {
         const firstModule = trackData.modules[0];
@@ -147,21 +168,19 @@ export function App() {
       setCurrentLessonData(lessonRes.data);
       setActiveLessonSlug(lessonSlug);
       setViewMode('lesson');
+      setCurrentView('tracks');
 
-      // Update URL without reload
       const newUrl = `/track/${trackSlug}/${lessonSlug}`;
       if (window.location.pathname !== newUrl) {
         window.history.pushState(null, '', newUrl);
       }
 
-      // Extract headings for Table of Contents
       extractHeadings(lessonRes.data.lesson.content);
     } catch (err) {
       console.error('Failed to load lesson:', err);
     }
   };
 
-  // Helper to extract H2 & H3 from markdown content
   const extractHeadings = (markdownText) => {
     const lines = (markdownText || '').split('\n');
     const extracted = [];
@@ -207,7 +226,6 @@ export function App() {
     }
   };
 
-  // Navigation handlers
   const handleSelectTrack = (trackSlug) => {
     loadTrackAndLesson(trackSlug, '');
   };
@@ -218,7 +236,20 @@ export function App() {
 
   const handleGoHome = () => {
     setViewMode('overview');
+    setCurrentView('tracks');
     window.history.pushState(null, '', '/');
+  };
+
+  const handleSelectView = (view) => {
+    setCurrentView(view);
+    if (view === 'tracks') {
+      if (!activeTrackSlug) {
+        setViewMode('overview');
+      }
+      window.history.pushState(null, '', '/');
+    } else {
+      window.history.pushState(null, '', `/${view}`);
+    }
   };
 
   const handleHeadingClick = (id) => {
@@ -229,7 +260,6 @@ export function App() {
     }
   };
 
-  // Determine if active lesson is completed
   const isCurrentCompleted = Boolean(
     currentLessonData?.lesson?._id &&
       completedLessonIds.some((id) => (typeof id === 'object' ? id._id || id.toString() : id.toString()) === currentLessonData.lesson._id.toString())
@@ -237,7 +267,7 @@ export function App() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#090d16] text-slate-100">
-      {/* Top Sticky Navigation */}
+      {/* 1. Sticky Navbar (CodeWithHarry / GeeksforGeeks navigation header) */}
       <Navbar
         tracks={tracks}
         activeTrack={activeTrack}
@@ -245,23 +275,49 @@ export function App() {
         onOpenSearch={() => setIsSearchOpen(true)}
         onToggleMobileMenu={() => setIsMobileMenuOpen(true)}
         onGoHome={handleGoHome}
+        currentView={currentView}
+        onSelectView={handleSelectView}
         progress={trackProgress}
       />
 
-      {/* Main View Container */}
+      {/* 2. Top Language Ribbon (W3Schools / CodeWithHarry quick-switcher) */}
+      <LanguageRibbon
+        tracks={tracks}
+        activeTrackSlug={activeTrackSlug}
+        onSelectTrack={handleSelectTrack}
+        currentView={currentView}
+        onSelectView={handleSelectView}
+      />
+
+      {/* 3. Main View Switcher */}
       <div className="flex-1 flex w-full">
-        {viewMode === 'overview' ? (
+        {currentView === 'notes' ? (
+          /* Handbooks & Downloadable Notes (GoalKicker / CodeWithHarry Notes style) */
+          <HandbooksView
+            tracks={tracks}
+            onSelectTrack={handleSelectTrack}
+          />
+        ) : currentView === 'cheatsheets' ? (
+          /* Cheatsheets View (CodeWithHarry Cheatsheets style) */
+          <CheatsheetsView
+            onSelectTrack={handleSelectTrack}
+          />
+        ) : currentView === 'playground' ? (
+          /* Playground View (W3Schools Try It Yourself style) */
+          <PlaygroundView />
+        ) : viewMode === 'overview' ? (
           /* Track Overview Dashboard */
           <TrackOverview
             tracks={tracks}
             progressMap={progressMap}
             onSelectTrack={handleSelectTrack}
             onOpenSearch={() => setIsSearchOpen(true)}
+            onSelectView={handleSelectView}
           />
         ) : (
-          /* Responsive 3-Column Layout */
+          /* Responsive 3-Column Tutorial Layout (GeeksforGeeks / W3Schools Course View) */
           <div className="flex w-full justify-between">
-            {/* 1. Left Sidebar: Syllabus & Modules (Desktop) */}
+            {/* Left Sidebar: Syllabus & Modules */}
             <div className="hidden md:block">
               <Sidebar
                 track={activeTrack}
@@ -274,7 +330,7 @@ export function App() {
               />
             </div>
 
-            {/* 2. Center Canvas: Main Reader */}
+            {/* Center Canvas: Lesson Reader */}
             <main className="flex-1 overflow-x-hidden">
               <LessonReader
                 lessonData={currentLessonData}
@@ -282,10 +338,11 @@ export function App() {
                 onToggleComplete={handleToggleComplete}
                 onNavigateLesson={handleSelectLesson}
                 onSelectTrack={handleSelectTrack}
+                onOpenPlayground={() => setCurrentView('playground')}
               />
             </main>
 
-            {/* 3. Right Rail: Dynamic Table of Contents (Desktop > 1024px) */}
+            {/* Right Rail: Floating Table of Contents */}
             <TableOfContents
               headings={headings}
               activeHeading={activeHeading}
@@ -294,6 +351,7 @@ export function App() {
               onToggleComplete={handleToggleComplete}
               hasPitfalls={Boolean(currentLessonData?.lesson?.commonPitfalls?.length)}
               hasChallenge={Boolean(currentLessonData?.lesson?.practiceChallenge?.problem)}
+              onOpenPlayground={() => setCurrentView('playground')}
             />
           </div>
         )}
