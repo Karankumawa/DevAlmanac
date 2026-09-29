@@ -1,0 +1,27 @@
+{
+  "name": "devalmanac-server",
+  "version": "1.0.0",
+  "description": "DevAlmanac Backend API and Curriculum Engine",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node src/index.js",
+    "seed": "node src/scripts/seed.js"
+  },
+  "keywords": [
+    "developer",
+    "notes",
+    "curriculum",
+    "almanac",
+    "programming"
+  ],
+  "author": "DevAlmanac",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.4",
+    "express": "^5.2.1",
+    "mongodb-memory-server": "^11.3.0",
+    "mongoose": "^9.10.2"
+  }
+}
